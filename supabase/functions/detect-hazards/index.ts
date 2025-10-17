@@ -47,8 +47,10 @@ HIGH THREATS (threatLevel: "high") - Objects blocking the path ahead:
 - Moving vehicles approaching or crossing the path
 - Steps/stairs directly ahead in walking path
 - Open holes or manholes in path
-- Large obstacles blocking forward movement
+- Large obstacles blocking forward movement (benches, trash cans, poles, etc.)
+- Doors or gates directly ahead in path
 - People/bikes approaching quickly in direct path
+- Any object obstructing the walking path
 
 LOW THREATS (threatLevel: "low") - Minor path obstructions:
 - Curbs directly ahead
