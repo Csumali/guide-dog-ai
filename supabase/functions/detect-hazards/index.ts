@@ -74,9 +74,17 @@ Warning (8 words max): Include approximate distance in steps or feet
 - "Car crossing 10 feet ahead"
 - "Wall 3 steps ahead"
 - "Bench 4 steps ahead"
-Avoidance (7 words max): "Move left", "Stop and step right", "Turn around"
 
-Provide clear directional guidance with distance: Estimate distance in steps (1 step ≈ 2.5 feet) or feet for clarity.
+Avoidance (12 words max): Analyze available space and provide TIMING + DIRECTION
+- Look at space to the LEFT and RIGHT of the obstacle
+- Tell them WHEN to move (now, in 2 steps, etc.) and WHICH DIRECTION has space
+Examples:
+- "Step right now, space available"
+- "Move left in 2 steps"
+- "Stop now, turn around"
+- "Step right in 3 steps, clear path"
+
+CRITICAL: Only suggest a direction if there is actual clear space in that direction. If both sides are blocked, say "Stop now, turn around".
 
 Only report what BLOCKS the forward path.`
           },
