@@ -16,6 +16,7 @@ const ContinuousMonitoring = ({ isNavigating }: ContinuousMonitoringProps) => {
   const [isMonitoring, setIsMonitoring] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [lastWarning, setLastWarning] = useState<string>("");
+  const [avoidanceInstruction, setAvoidanceInstruction] = useState<string>("");
   const [threatLevel, setThreatLevel] = useState<"none" | "low" | "high">("none");
   const monitoringIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
@@ -108,10 +109,14 @@ const ContinuousMonitoring = ({ isNavigating }: ContinuousMonitoringProps) => {
         const threat = data.threatLevel || "low";
         setThreatLevel(threat);
         setLastWarning(data.warning);
+        setAvoidanceInstruction(data.avoidance || "");
 
         // Only speak if it's a new warning or high threat
         if (threat === "high" || data.warning !== lastWarning) {
-          speak(data.warning, 1.0);
+          const message = data.avoidance 
+            ? `${data.warning}. ${data.avoidance}` 
+            : data.warning;
+          speak(message, 1.0);
           
           // Urgent haptic pattern for high threats
           if ('vibrate' in navigator) {
@@ -124,6 +129,7 @@ const ContinuousMonitoring = ({ isNavigating }: ContinuousMonitoringProps) => {
         }
       } else {
         setThreatLevel("none");
+        setAvoidanceInstruction("");
       }
     } catch (error) {
       console.error("Error analyzing for hazards:", error);
@@ -154,7 +160,10 @@ const ContinuousMonitoring = ({ isNavigating }: ContinuousMonitoringProps) => {
         
         {threatLevel !== "none" && (
           <div className={`absolute top-2 left-2 right-2 ${threatLevel === "high" ? "bg-destructive" : "bg-accent"} text-white px-3 py-2 rounded-lg text-sm font-semibold`}>
-            {lastWarning}
+            <div>{lastWarning}</div>
+            {avoidanceInstruction && (
+              <div className="text-xs mt-1 opacity-90">{avoidanceInstruction}</div>
+            )}
           </div>
         )}
       </div>

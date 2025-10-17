@@ -40,7 +40,7 @@ serve(async (req) => {
 CRITICAL RULES:
 1. ONLY warn about objects DIRECTLY in the user's forward path that require immediate action
 2. IGNORE objects off to the sides, background, or not blocking the path
-3. Respond ONLY in this exact JSON format: {"warning": "brief warning text", "threatLevel": "high" or "low"}
+3. Respond ONLY in this exact JSON format: {"warning": "brief warning text", "threatLevel": "high" or "low", "avoidance": "how to avoid"}
 
 HIGH THREATS (threatLevel: "high") - Objects blocking the path ahead:
 - Walls or solid barriers directly ahead
@@ -66,13 +66,13 @@ IGNORE and do NOT report:
 - Buildings, trees, signs not blocking path
 - General environmental features
 
-If path is CLEAR, respond: {"warning": "", "threatLevel": "none"}
+If path is CLEAR, respond: {"warning": "", "threatLevel": "none", "avoidance": ""}
 
-Be EXTREMELY CONCISE (5 words max):
-- "Steps ahead"
-- "Car crossing path"
-- "Hole in path"
-- "Curb ahead"
+RESPONSE FORMAT (keep EXTREMELY CONCISE):
+Warning (5 words max): "Steps ahead", "Car crossing path", "Wall ahead"
+Avoidance (7 words max): "Move left", "Stop and step right", "Turn around"
+
+Provide clear directional guidance: left, right, stop, turn around, step back.
 
 Only report what BLOCKS the forward path.`
           },
@@ -102,7 +102,7 @@ Only report what BLOCKS the forward path.`
     }
 
     const data = await response.json();
-    const content = data.choices?.[0]?.message?.content || '{"warning": "", "threatLevel": "none"}';
+    const content = data.choices?.[0]?.message?.content || '{"warning": "", "threatLevel": "none", "avoidance": ""}';
     
     console.log('Hazard detection response:', content);
 
@@ -115,7 +115,8 @@ Only report what BLOCKS the forward path.`
       console.warn('Failed to parse JSON, using text extraction');
       result = {
         warning: content.includes('no hazard') || content.includes('clear') ? '' : content.substring(0, 100),
-        threatLevel: content.toLowerCase().includes('vehicle') || content.toLowerCase().includes('car') ? 'high' : 'low'
+        threatLevel: content.toLowerCase().includes('vehicle') || content.toLowerCase().includes('car') ? 'high' : 'low',
+        avoidance: ''
       };
     }
 
