@@ -6,7 +6,7 @@ import VoiceControls from "@/components/VoiceControls";
 import ContinuousMonitoring, { ContinuousMonitoringRef } from "@/components/ContinuousMonitoring";
 import { speak } from "@/utils/textToSpeech";
 import { keepScreenAwake, detectMobileDevice } from "@/utils/mobileOptimizations";
-import { Dog, Mic, Send, Play } from "lucide-react";
+import { Dog, Mic, Send } from "lucide-react";
 
 const Index = () => {
   const [sceneDescription, setSceneDescription] = useState<string>("");
@@ -84,18 +84,8 @@ const Index = () => {
           </div>
         </Card>
 
-        {/* Action Buttons */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Button 
-            size="lg" 
-            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium h-14 text-base"
-            onClick={() => monitorRef.current?.captureAndAnalyze()}
-          >
-            <Play className="h-5 w-5 mr-2" />
-            Start Detection
-          </Button>
-          <VoiceControls onCommand={handleVoiceCommand} />
-        </div>
+        {/* Voice Controls */}
+        <VoiceControls onCommand={handleVoiceCommand} />
 
         {/* Camera & Safety Monitor */}
         <ContinuousMonitoring ref={monitorRef} onSceneDescription={handleSceneDescription} />
