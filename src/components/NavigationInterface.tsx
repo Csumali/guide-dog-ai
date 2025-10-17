@@ -24,11 +24,39 @@ interface NavigationInterfaceProps {
 const NavigationInterface = ({ onNavigationStart }: NavigationInterfaceProps) => {
   const [destination, setDestination] = useState("");
   const [currentLocation, setCurrentLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [currentHeading, setCurrentHeading] = useState<number | null>(null);
   const [isNavigating, setIsNavigating] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [steps, setSteps] = useState<Step[]>([]);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const { toast } = useToast();
+
+  useEffect(() => {
+    // Watch device heading/compass
+    const handleOrientation = (event: DeviceOrientationEvent) => {
+      if (event.alpha !== null) {
+        // alpha is the compass heading (0-360 degrees)
+        setCurrentHeading(event.alpha);
+      }
+    };
+
+    // Request permission for iOS devices
+    if (typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
+      (DeviceOrientationEvent as any).requestPermission()
+        .then((permissionState: string) => {
+          if (permissionState === 'granted') {
+            window.addEventListener('deviceorientation', handleOrientation);
+          }
+        })
+        .catch(console.error);
+    } else {
+      window.addEventListener('deviceorientation', handleOrientation);
+    }
+
+    return () => {
+      window.removeEventListener('deviceorientation', handleOrientation);
+    };
+  }, []);
 
   useEffect(() => {
     // Get user's current location and watch for changes
@@ -40,6 +68,12 @@ const NavigationInterface = ({ onNavigationStart }: NavigationInterfaceProps) =>
             lng: position.coords.longitude
           };
           setCurrentLocation(newLocation);
+          
+          // Use heading from GPS if available (more accurate when moving)
+          if (position.coords.heading !== null && position.coords.heading >= 0) {
+            setCurrentHeading(position.coords.heading);
+          }
+          
           console.log('Location updated:', position.coords);
 
           // If navigating, check proximity to next waypoint
@@ -82,10 +116,11 @@ const NavigationInterface = ({ onNavigationStart }: NavigationInterfaceProps) =>
     console.log(`Distance to next waypoint: ${distance.toFixed(0)}m`);
 
     // Announce proximity at 50m, 20m
+    const instruction = simplifyInstruction(step.html_instructions, step);
     if (distance < 50 && distance > 45) {
-      speak("In 50 meters, " + stripHtml(step.html_instructions), 0.9);
+      speak("In 50 meters, " + instruction, 0.9);
     } else if (distance < 20 && distance > 15) {
-      speak("In 20 meters, " + stripHtml(step.html_instructions), 0.9);
+      speak("In 20 meters, " + instruction, 0.9);
     }
 
     // Auto-advance when within 15 meters
@@ -153,7 +188,8 @@ const NavigationInterface = ({ onNavigationStart }: NavigationInterfaceProps) =>
         setIsNavigating(true);
 
         const firstStep = navigationSteps[0];
-        const announcement = `Starting navigation to ${destination}. ${stripHtml(firstStep.html_instructions)}. Distance: ${firstStep.distance.text}`;
+        const instruction = simplifyInstruction(firstStep.html_instructions, firstStep);
+        const announcement = `Starting navigation to ${destination}. ${instruction}. Distance: ${firstStep.distance.text}`;
         speak(announcement, 0.9);
 
         toast({
@@ -190,7 +226,8 @@ const NavigationInterface = ({ onNavigationStart }: NavigationInterfaceProps) =>
       const newIndex = currentStepIndex + 1;
       setCurrentStepIndex(newIndex);
       const step = steps[newIndex];
-      speak(`${stripHtml(step.html_instructions)}. Distance: ${step.distance.text}`, 0.9);
+      const instruction = simplifyInstruction(step.html_instructions, step);
+      speak(`${instruction}. Distance: ${step.distance.text}`, 0.9);
     } else {
       speak("You have arrived at your destination", 0.9);
       
@@ -206,12 +243,67 @@ const NavigationInterface = ({ onNavigationStart }: NavigationInterfaceProps) =>
   const repeatStep = () => {
     if (steps[currentStepIndex]) {
       const step = steps[currentStepIndex];
-      speak(`${stripHtml(step.html_instructions)}. Distance: ${step.distance.text}`, 0.9);
+      const instruction = simplifyInstruction(step.html_instructions, step);
+      speak(`${instruction}. Distance: ${step.distance.text}`, 0.9);
     }
   };
 
   const stripHtml = (html: string) => {
     return html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+  };
+
+  const getRelativeDirection = (targetLat: number, targetLng: number): string => {
+    if (!currentLocation || currentHeading === null) return "";
+
+    // Calculate bearing to target
+    const lat1 = currentLocation.lat * Math.PI / 180;
+    const lat2 = targetLat * Math.PI / 180;
+    const dLng = (targetLng - currentLocation.lng) * Math.PI / 180;
+
+    const y = Math.sin(dLng) * Math.cos(lat2);
+    const x = Math.cos(lat1) * Math.sin(lat2) -
+              Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLng);
+    let bearing = Math.atan2(y, x) * 180 / Math.PI;
+    bearing = (bearing + 360) % 360; // Normalize to 0-360
+
+    // Calculate relative angle
+    let relativeAngle = bearing - currentHeading;
+    if (relativeAngle < 0) relativeAngle += 360;
+    if (relativeAngle > 180) relativeAngle -= 360;
+
+    // Convert to simple direction
+    if (relativeAngle > -22.5 && relativeAngle < 22.5) return "straight ahead";
+    if (relativeAngle >= 22.5 && relativeAngle < 67.5) return "slightly right";
+    if (relativeAngle >= 67.5 && relativeAngle < 112.5) return "right";
+    if (relativeAngle >= 112.5 && relativeAngle < 157.5) return "sharp right";
+    if (relativeAngle >= 157.5 || relativeAngle <= -157.5) return "behind you";
+    if (relativeAngle <= -112.5 && relativeAngle > -157.5) return "sharp left";
+    if (relativeAngle <= -67.5 && relativeAngle > -112.5) return "left";
+    if (relativeAngle <= -22.5 && relativeAngle > -67.5) return "slightly left";
+    
+    return "ahead";
+  };
+
+  const simplifyInstruction = (instruction: string, step: Step): string => {
+    // Remove HTML
+    let simplified = stripHtml(instruction);
+    
+    // Get relative direction to the end of this step
+    const relativeDir = getRelativeDirection(step.end_location.lat, step.end_location.lng);
+    
+    // Replace cardinal directions with relative directions
+    simplified = simplified
+      .replace(/head\s+(north|south|east|west|northeast|northwest|southeast|southwest)/gi, `go ${relativeDir}`)
+      .replace(/turn\s+(north|south|east|west|northeast|northwest|southeast|southwest)/gi, `turn ${relativeDir}`)
+      .replace(/\b(north|south|east|west|northeast|northwest|southeast|southwest)\b/gi, relativeDir);
+    
+    // Simplify common patterns
+    simplified = simplified
+      .replace(/continue onto/gi, 'continue on')
+      .replace(/proceed to/gi, 'go to')
+      .replace(/destination will be/gi, 'destination is');
+    
+    return simplified;
   };
 
   return (
@@ -271,7 +363,7 @@ const NavigationInterface = ({ onNavigationStart }: NavigationInterfaceProps) =>
                   Step {currentStepIndex + 1} of {steps.length}
                 </p>
                 <p className="text-xl font-semibold text-foreground">
-                  {stripHtml(steps[currentStepIndex]?.html_instructions || '')}
+                  {steps[currentStepIndex] ? simplifyInstruction(steps[currentStepIndex].html_instructions, steps[currentStepIndex]) : ''}
                 </p>
                 <p className="text-lg text-muted-foreground mt-2">
                   {steps[currentStepIndex]?.distance.text} • {steps[currentStepIndex]?.duration.text}
