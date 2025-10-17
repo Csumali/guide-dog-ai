@@ -43,6 +43,7 @@ CRITICAL RULES:
 3. Respond ONLY in this exact JSON format: {"warning": "brief warning text", "threatLevel": "high" or "low"}
 
 HIGH THREATS (threatLevel: "high") - Objects blocking the path ahead:
+- Walls or solid barriers directly ahead
 - Moving vehicles approaching or crossing the path
 - Steps/stairs directly ahead in walking path
 - Open holes or manholes in path
