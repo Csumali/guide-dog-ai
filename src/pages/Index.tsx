@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import VoiceControls from "@/components/VoiceControls";
 import ContinuousMonitoring, { ContinuousMonitoringRef } from "@/components/ContinuousMonitoring";
 import { speak } from "@/utils/textToSpeech";
 import { keepScreenAwake, detectMobileDevice } from "@/utils/mobileOptimizations";
-import { Eye } from "lucide-react";
+import { Dog, Mic, Send, Play } from "lucide-react";
 
 const Index = () => {
   const [sceneDescription, setSceneDescription] = useState<string>("");
@@ -52,21 +54,46 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background p-4 md:p-8 pb-safe">
-      <div className="max-w-4xl mx-auto space-y-6 md:space-y-8">
+    <div className="min-h-screen bg-background p-4 md:p-6 pb-safe">
+      <div className="max-w-3xl mx-auto space-y-4 md:space-y-6">
         {/* Header */}
-        <header className="text-center space-y-3 py-4 md:py-8">
-          <div className="flex items-center justify-center gap-2 md:gap-3">
-            <Eye className="h-10 md:h-12 w-10 md:w-12 text-primary" />
-            <h1 className="text-3xl md:text-5xl font-bold text-foreground">PathGuide AI</h1>
+        <header className="text-center space-y-2 py-6">
+          <div className="flex items-center justify-center gap-3">
+            <Dog className="h-10 w-10 text-secondary" />
+            <h1 className="text-4xl font-bold text-foreground">Guide Dog AI</h1>
           </div>
-          <p className="text-lg md:text-2xl text-muted-foreground">
-            Your AI navigation companion
+          <p className="text-base text-secondary/90">
+            Your AI-powered guide that sees, announces, and helps you navigate safely
           </p>
         </header>
 
-        {/* Voice Controls - Always Visible */}
-        <div className="flex justify-center">
+        {/* Input Card */}
+        <Card className="p-6 bg-card border-border">
+          <h2 className="text-lg font-medium mb-4 text-foreground">How can I help you?</h2>
+          <div className="flex gap-2">
+            <Input 
+              placeholder="Ask a question or navigate to a place..." 
+              className="flex-1 bg-input border-border text-foreground placeholder:text-muted-foreground"
+            />
+            <Button size="icon" variant="ghost" className="text-muted-foreground hover:text-foreground">
+              <Mic className="h-5 w-5" />
+            </Button>
+            <Button size="icon" className="bg-primary hover:bg-primary/90">
+              <Send className="h-5 w-5" />
+            </Button>
+          </div>
+        </Card>
+
+        {/* Action Buttons */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Button 
+            size="lg" 
+            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium h-14 text-base"
+            onClick={() => monitorRef.current?.captureAndAnalyze()}
+          >
+            <Play className="h-5 w-5 mr-2" />
+            Start Detection
+          </Button>
           <VoiceControls onCommand={handleVoiceCommand} />
         </div>
 
@@ -74,32 +101,13 @@ const Index = () => {
         <ContinuousMonitoring ref={monitorRef} onSceneDescription={handleSceneDescription} />
 
         {sceneDescription && (
-          <Card className="p-6 bg-muted">
+          <Card className="p-6 bg-card border-border">
             <h2 className="text-xl font-semibold text-foreground mb-2">Scene Description:</h2>
-            <p className="text-lg text-foreground leading-relaxed">
+            <p className="text-base text-foreground/90 leading-relaxed">
               {sceneDescription}
             </p>
           </Card>
         )}
-
-        {/* Instructions */}
-        <Card className="p-6 bg-card/50">
-          <h2 className="text-2xl font-semibold mb-4 text-foreground">Voice Commands:</h2>
-          <ul className="space-y-3 text-lg text-muted-foreground">
-            <li className="flex items-start gap-2">
-              <span className="text-primary font-bold">•</span>
-              <span><strong>"Describe what's in front of me"</strong> - Analyzes the current scene</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-primary font-bold">•</span>
-              <span><strong>"Find me [object]"</strong> - Locates specific objects (e.g., "find me a crosswalk button")</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-primary font-bold">•</span>
-              <span><strong>"Help"</strong> - Lists available commands</span>
-            </li>
-          </ul>
-        </Card>
       </div>
     </div>
   );
