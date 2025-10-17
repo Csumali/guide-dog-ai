@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.get-directions]
 verify_jwt = false
+
+[functions.detect-hazards]
+verify_jwt = false

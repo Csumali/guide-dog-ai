@@ -10,9 +10,11 @@ import { speak } from "@/utils/textToSpeech";
 interface Step {
   instruction: string;
   html_instructions: string;
-  distance: { text: string };
+  distance: { text: string; value: number };
   duration: { text: string };
   maneuver?: string;
+  start_location: { lat: number; lng: number };
+  end_location: { lat: number; lng: number };
 }
 
 interface NavigationInterfaceProps {
@@ -29,15 +31,21 @@ const NavigationInterface = ({ onNavigationStart }: NavigationInterfaceProps) =>
   const { toast } = useToast();
 
   useEffect(() => {
-    // Get user's current location
+    // Get user's current location and watch for changes
     if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
+      const watchId = navigator.geolocation.watchPosition(
         (position) => {
-          setCurrentLocation({
+          const newLocation = {
             lat: position.coords.latitude,
             lng: position.coords.longitude
-          });
-          console.log('Location acquired:', position.coords);
+          };
+          setCurrentLocation(newLocation);
+          console.log('Location updated:', position.coords);
+
+          // If navigating, check proximity to next waypoint
+          if (isNavigating && steps.length > 0) {
+            checkProximityToWaypoint(newLocation);
+          }
         },
         (error) => {
           console.error('Geolocation error:', error);
@@ -46,10 +54,61 @@ const NavigationInterface = ({ onNavigationStart }: NavigationInterfaceProps) =>
             description: "Please enable location services for navigation",
             variant: "destructive",
           });
+        },
+        {
+          enableHighAccuracy: true,
+          maximumAge: 0,
+          timeout: 5000
         }
       );
+
+      return () => navigator.geolocation.clearWatch(watchId);
     }
-  }, [toast]);
+  }, [isNavigating, steps, currentStepIndex, toast]);
+
+  const checkProximityToWaypoint = (location: { lat: number; lng: number }) => {
+    if (!steps[currentStepIndex]) return;
+
+    const step = steps[currentStepIndex];
+    if (!step.end_location) return;
+
+    const distance = calculateDistance(
+      location.lat,
+      location.lng,
+      step.end_location.lat,
+      step.end_location.lng
+    );
+
+    console.log(`Distance to next waypoint: ${distance.toFixed(0)}m`);
+
+    // Announce proximity at 50m, 20m
+    if (distance < 50 && distance > 45) {
+      speak("In 50 meters, " + stripHtml(step.html_instructions), 0.9);
+    } else if (distance < 20 && distance > 15) {
+      speak("In 20 meters, " + stripHtml(step.html_instructions), 0.9);
+    }
+
+    // Auto-advance when within 15 meters
+    if (distance < 15) {
+      console.log('Reached waypoint, advancing to next step');
+      nextStep();
+    }
+  };
+
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+    const R = 6371e3; // Earth's radius in meters
+    const φ1 = (lat1 * Math.PI) / 180;
+    const φ2 = (lat2 * Math.PI) / 180;
+    const Δφ = ((lat2 - lat1) * Math.PI) / 180;
+    const Δλ = ((lon2 - lon1) * Math.PI) / 180;
+
+    const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+              Math.cos(φ1) * Math.cos(φ2) *
+              Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+    return R * c; // Distance in meters
+  };
 
   const startNavigation = async () => {
     if (!destination.trim()) {

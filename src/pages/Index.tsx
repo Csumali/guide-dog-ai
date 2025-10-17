@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import CameraCapture from "@/components/CameraCapture";
 import VoiceControls from "@/components/VoiceControls";
 import NavigationInterface from "@/components/NavigationInterface";
+import ContinuousMonitoring from "@/components/ContinuousMonitoring";
 import { speak } from "@/utils/textToSpeech";
 import { keepScreenAwake, detectMobileDevice } from "@/utils/mobileOptimizations";
 import { Eye, Navigation, Camera } from "lucide-react";
@@ -92,10 +93,13 @@ const Index = () => {
                 </div>
               )}
             </Card>
+
+            <ContinuousMonitoring isNavigating={false} />
           </TabsContent>
 
-          <TabsContent value="navigation">
+          <TabsContent value="navigation" className="space-y-6">
             <NavigationInterface onNavigationStart={handleNavigationStart} />
+            <ContinuousMonitoring isNavigating={!!navigationDestination} />
           </TabsContent>
         </Tabs>
 
