@@ -1,7 +1,7 @@
 {
-  "name": "PathGuide AI",
-  "short_name": "PathGuide",
-  "description": "AI navigation assistant for visually impaired users",
+  "name": "Guide Dog AI",
+  "short_name": "Guide Dog",
+  "description": "Your AI-powered guide that sees, announces, and helps you navigate safely",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#1a1f2e",

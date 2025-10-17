@@ -8,34 +8,34 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* High contrast accessible theme for visually impaired users */
-    --background: 220 15% 8%;
+    /* Guide Dog AI theme - dark navy with bright blue accents */
+    --background: 215 35% 12%;
     --foreground: 0 0% 98%;
 
-    --card: 220 15% 10%;
+    --card: 215 30% 16%;
     --card-foreground: 0 0% 98%;
 
-    --popover: 220 15% 10%;
+    --popover: 215 30% 16%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 40 95% 55%;
-    --primary-foreground: 220 15% 8%;
+    --primary: 206 100% 60%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 200 90% 50%;
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 180 100% 45%;
+    --secondary-foreground: 215 35% 12%;
 
-    --muted: 220 15% 20%;
-    --muted-foreground: 0 0% 70%;
+    --muted: 215 25% 22%;
+    --muted-foreground: 210 15% 70%;
 
-    --accent: 280 85% 60%;
-    --accent-foreground: 0 0% 98%;
+    --accent: 180 100% 45%;
+    --accent-foreground: 215 35% 12%;
 
     --destructive: 0 85% 60%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 220 15% 25%;
-    --input: 220 15% 25%;
-    --ring: 40 95% 55%;
+    --border: 215 20% 25%;
+    --input: 215 25% 20%;
+    --ring: 206 100% 60%;
 
     --radius: 1rem;
   }

@@ -108,18 +108,18 @@ const VoiceControls = ({ onCommand }: VoiceControlsProps) => {
     <Button
       onClick={toggleListening}
       size="lg"
-      variant={isListening ? "destructive" : "secondary"}
-      className="min-h-16 px-8 text-lg font-semibold"
+      variant={isListening ? "destructive" : "default"}
+      className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium h-14 text-base"
     >
       {isListening ? (
         <>
-          <MicOff className="mr-2 h-6 w-6" />
+          <MicOff className="mr-2 h-5 w-5" />
           Stop Listening
         </>
       ) : (
         <>
-          <Mic className="mr-2 h-6 w-6" />
-          Voice Command
+          <Mic className="mr-2 h-5 w-5" />
+          Ask Question
         </>
       )}
     </Button>
