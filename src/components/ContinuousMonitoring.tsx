@@ -6,11 +6,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { speak, stopSpeaking } from "@/utils/textToSpeech";
 
-interface ContinuousMonitoringProps {
-  isNavigating: boolean;
-}
+interface ContinuousMonitoringProps {}
 
-const ContinuousMonitoring = ({ isNavigating }: ContinuousMonitoringProps) => {
+const ContinuousMonitoring: React.FC<ContinuousMonitoringProps> = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isMonitoring, setIsMonitoring] = useState(false);
@@ -222,12 +220,6 @@ const ContinuousMonitoring = ({ isNavigating }: ContinuousMonitoringProps) => {
           </>
         )}
       </Button>
-
-      {isNavigating && (
-        <p className="text-xs text-muted-foreground mt-2 text-center">
-          Monitor detects vehicles, obstacles, and hazards while you navigate
-        </p>
-      )}
     </Card>
   );
 };
