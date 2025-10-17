@@ -32,8 +32,7 @@ Return ONLY a JSON response with:
   "targetReached": true/false,
   "warning": "only obstacles BLOCKING the path to target",
   "threatLevel": "high" (if blocked), "low" (minor obstacles), or "none" (clear path to target),
-  "avoidance": "how to avoid blocking obstacles while moving toward target",
-  "pointOfInterest": "brief description if approaching crosswalk/traffic light/corner/stairs/door" or empty
+  "avoidance": "how to avoid blocking obstacles while moving toward target"
 }
 
 GUIDANCE INSTRUCTIONS:
@@ -49,7 +48,7 @@ Only report obstacles that would prevent them from reaching the target.`
 CRITICAL RULES:
 1. ONLY warn about objects DIRECTLY in the user's forward path that require immediate action
 2. IGNORE objects off to the sides, background, or not blocking the path
-3. Respond ONLY in this exact JSON format: {"warning": "brief warning text", "threatLevel": "high" or "low", "avoidance": "how to avoid", "pointOfInterest": "description or empty"}
+3. Respond ONLY in this exact JSON format: {"warning": "brief warning text", "threatLevel": "high" or "low", "avoidance": "how to avoid"}
 
 HIGH THREATS (threatLevel: "high") - Objects blocking the path ahead:
 - Walls or solid barriers directly ahead
@@ -75,17 +74,7 @@ IGNORE and do NOT report:
 - Buildings, trees, signs not blocking path
 - General environmental features
 
-POINT OF INTEREST DETECTION:
-If approaching (within 10 steps) any of these, set pointOfInterest:
-- Crosswalks: "Approaching crosswalk ahead"
-- Traffic lights: "Approaching traffic light"
-- Street corners: "Approaching street corner"
-- Building entrances/doors: "Approaching entrance"
-- Stairs/steps: "Approaching stairs"
-- Elevators: "Approaching elevator"
-Otherwise leave pointOfInterest empty.
-
-If path is CLEAR, respond: {"warning": "", "threatLevel": "none", "avoidance": "", "pointOfInterest": ""}
+If path is CLEAR, respond: {"warning": "", "threatLevel": "none", "avoidance": ""}
 
 RESPONSE FORMAT (keep EXTREMELY CONCISE):
 Warning (8 words max): Include approximate distance in steps or feet
