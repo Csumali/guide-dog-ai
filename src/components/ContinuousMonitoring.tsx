@@ -203,38 +203,24 @@ const ContinuousMonitoring = forwardRef<ContinuousMonitoringRef, ContinuousMonit
 
       if (error) throw error;
 
-      // Check for point of interest and trigger scene description
-      if (data?.pointOfInterest && data.pointOfInterest.trim()) {
-        speak(data.pointOfInterest);
-        setLastWarning(data.pointOfInterest);
-        // Trigger detailed scene description after brief delay
-        setTimeout(() => {
-          captureAndAnalyze();
-        }, 1500);
-      }
-
-      // Check if target reached
-      if (data?.targetReached && searchTarget) {
-        speak(`You've reached the ${searchTarget}`);
-        setSearchTarget(null);
-        setThreatLevel("none");
-        setLastWarning("");
-        return;
-      }
-
-      // If searching for object and we have guidance, speak it
-      if (searchTarget && data?.guidance) {
-        speak(data.guidance, 1.0);
-        setLastWarning(data.guidance);
-        setThreatLevel(data.threatLevel || "none");
-        return;
-      }
-
       if (data?.warning) {
         const threat = data.threatLevel || "low";
         setThreatLevel(threat);
         setLastWarning(data.warning);
         setAvoidanceInstruction(data.avoidance || "");
+
+        // Check if target reached
+        if (data.targetReached && searchTarget) {
+          speak(`You've reached the ${searchTarget}`);
+          setSearchTarget(null);
+          return;
+        }
+
+        // If searching for object and we have guidance, speak it
+        if (searchTarget && data.guidance) {
+          speak(data.guidance, 1.0);
+          return;
+        }
 
         // Extract distance from warning (e.g., "Stairs 5 steps ahead" -> 5)
         const distanceMatch = data.warning.match(/(\d+)\s*(step|feet)/i);
