@@ -1,73 +1,44 @@
-# Welcome to your Lovable project
+# 🧭 Guide Dog AI
+### Multimodal Navigation Assistant for the Visually Impaired
 
-## Project info
+**Guide Dog AI** is a cross-platform mobile app (Android + iOS) that helps visually impaired users navigate safely using **real-time camera input** and **multimodal AI (Gemini)**.  
+It provides **voice and haptic feedback** to describe surroundings, warn about obstacles, and guide users interactively along safe walking routes.
 
-**URL**: https://lovable.dev/projects/81c8b734-3b86-49fe-8d74-da298a308bdb
+![Alt text](assets/img.png)
 
-## How can I edit this code?
+---
 
-There are several ways of editing your application.
+## 🌟 Features
 
-**Use Lovable**
+### 👁️ AI Scene Understanding
+- Uses the phone’s camera and a **multimodal LLM** to interpret the environment in real-time.
+- Describes scenes conversationally:
+  > “You’re approaching a crosswalk with cars moving left to right.”
+- Detects obstacles (poles, walls, benches, pedestrians, etc.) and advises avoidance:
+  > “Obstacle ahead, move slightly left.”
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/81c8b734-3b86-49fe-8d74-da298a308bdb) and start prompting.
+### 🔊 Audio + Haptic Feedback
+- Text-to-Speech (TTS) for natural voice guidance.
+- Optional **vibration cues** for left/right turns or obstacle alerts.
+- Configurable feedback sensitivity.
 
-Changes made via Lovable will be committed automatically to this repo.
+### 🔒 Privacy by Design
+- No video is stored — all camera data is processed transiently for inference.
+---
 
-**Use your preferred IDE**
+## 🧱 Architecture Overview
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/81c8b734-3b86-49fe-8d74-da298a308bdb) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+```text
+Camera Feed ─▶ Frame Sampler (1–2 FPS)
+               │
+               ▼
+        Multimodal LLM API
+            (Gemini)
+               │
+     ┌─────────┴─────────┐
+     ▼                   ▼
+ Scene Description   Obstacle Warnings
+     │                   │
+     └─────────┬─────────┘
+               ▼
+   Voice + Haptic Feedback
