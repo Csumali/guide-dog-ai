@@ -23,6 +23,7 @@ const ContinuousMonitoring = forwardRef<ContinuousMonitoringRef, ContinuousMonit
   const [lastWarning, setLastWarning] = useState<string>("");
   const [avoidanceInstruction, setAvoidanceInstruction] = useState<string>("");
   const [threatLevel, setThreatLevel] = useState<"none" | "low" | "high">("none");
+  const [searchTarget, setSearchTarget] = useState<string | null>(null);
   const monitoringIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const lastSpeechRef = useRef<{ warning: string; distance: number; threatLevel: string; timestamp: number }>({ 
     warning: "", 
@@ -42,6 +43,7 @@ const ContinuousMonitoring = forwardRef<ContinuousMonitoringRef, ContinuousMonit
       return;
     }
 
+    setSearchTarget(searchQuery);
     const canvas = canvasRef.current;
     const video = videoRef.current;
     
@@ -196,7 +198,7 @@ const ContinuousMonitoring = forwardRef<ContinuousMonitoringRef, ContinuousMonit
 
     try {
       const { data, error } = await supabase.functions.invoke('detect-hazards', {
-        body: { imageData }
+        body: { imageData, searchTarget }
       });
 
       if (error) throw error;
@@ -206,6 +208,19 @@ const ContinuousMonitoring = forwardRef<ContinuousMonitoringRef, ContinuousMonit
         setThreatLevel(threat);
         setLastWarning(data.warning);
         setAvoidanceInstruction(data.avoidance || "");
+
+        // Check if target reached
+        if (data.targetReached && searchTarget) {
+          speak(`You've reached the ${searchTarget}`);
+          setSearchTarget(null);
+          return;
+        }
+
+        // If searching for object and we have guidance, speak it
+        if (searchTarget && data.guidance) {
+          speak(data.guidance, 1.0);
+          return;
+        }
 
         // Extract distance from warning (e.g., "Stairs 5 steps ahead" -> 5)
         const distanceMatch = data.warning.match(/(\d+)\s*(step|feet)/i);

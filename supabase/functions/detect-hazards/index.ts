@@ -11,7 +11,7 @@ serve(async (req) => {
   }
 
   try {
-    const { imageData } = await req.json();
+    const { imageData, searchTarget } = await req.json();
     
     if (!imageData) {
       throw new Error('No image data provided');
@@ -22,20 +22,28 @@ serve(async (req) => {
       throw new Error('LOVABLE_API_KEY not configured');
     }
 
-    console.log('Analyzing for hazards with Gemini Vision...');
+    const systemPrompt = searchTarget 
+      ? `You are a navigation assistant helping a visually impaired person find: "${searchTarget}".
+Analyze the image and provide guidance to help them reach this target safely.
 
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          {
-            role: 'system',
-            content: `You are a safety monitoring AI for visually impaired pedestrians. Analyze ONLY the direct walking path ahead.
+Return ONLY a JSON response with:
+{
+  "guidance": "direction and distance to target",
+  "targetReached": true/false,
+  "warning": "only obstacles BLOCKING the path to target",
+  "threatLevel": "high" (if blocked), "low" (minor obstacles), or "none" (clear path to target),
+  "avoidance": "how to avoid blocking obstacles while moving toward target"
+}
+
+GUIDANCE INSTRUCTIONS:
+- Use clock position and distance (e.g., "The crosswalk button is at 2 o'clock, about 5 steps ahead")
+- If target is visible and within reach (arm's length), set targetReached to true
+- Guide them positively: "Continue straight 3 steps", "Turn slightly right, 4 steps ahead"
+- IGNORE the target object itself as a hazard - only warn about obstacles blocking their path to it
+- If path to target is clear, keep warning empty and threatLevel "none"
+
+Only report obstacles that would prevent them from reaching the target.`
+      : `You are a safety monitoring AI for visually impaired pedestrians. Analyze ONLY the direct walking path ahead.
 
 CRITICAL RULES:
 1. ONLY warn about objects DIRECTLY in the user's forward path that require immediate action
@@ -86,7 +94,20 @@ Examples:
 
 CRITICAL: Only suggest a direction if there is actual clear space in that direction. If both sides are blocked, say "Stop now, turn around".
 
-Only report what BLOCKS the forward path.`
+Only report what BLOCKS the forward path.`;
+
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          {
+            role: 'system',
+            content: systemPrompt
           },
           {
             role: 'user',
