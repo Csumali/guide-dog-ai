@@ -17,13 +17,26 @@ const CameraCapture = ({ onSceneDescription }: CameraCaptureProps) => {
 
   const startCamera = async () => {
     try {
+      // Request camera with mobile-optimized settings
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment" }
+        video: { 
+          facingMode: "environment",
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        }
       });
       
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        videoRef.current.setAttribute('playsinline', 'true');
+        videoRef.current.setAttribute('webkit-playsinline', 'true');
         setIsStreaming(true);
+        
+        // Haptic feedback on mobile
+        if ('vibrate' in navigator) {
+          navigator.vibrate(50);
+        }
+        
         toast({
           title: "Camera active",
           description: "Point your camera to analyze surroundings",
@@ -51,6 +64,11 @@ const CameraCapture = ({ onSceneDescription }: CameraCaptureProps) => {
   const captureAndAnalyze = async () => {
     if (!videoRef.current || !canvasRef.current) return;
 
+    // Haptic feedback
+    if ('vibrate' in navigator) {
+      navigator.vibrate([50, 100, 50]);
+    }
+
     setIsAnalyzing(true);
     const canvas = canvasRef.current;
     const video = videoRef.current;
@@ -73,9 +91,20 @@ const CameraCapture = ({ onSceneDescription }: CameraCaptureProps) => {
 
       if (data?.description) {
         onSceneDescription(data.description);
+        
+        // Success haptic
+        if ('vibrate' in navigator) {
+          navigator.vibrate(200);
+        }
       }
     } catch (error) {
       console.error("Error analyzing scene:", error);
+      
+      // Error haptic
+      if ('vibrate' in navigator) {
+        navigator.vibrate([100, 50, 100]);
+      }
+      
       toast({
         title: "Analysis failed",
         description: "Could not analyze the scene. Please try again.",
@@ -88,22 +117,23 @@ const CameraCapture = ({ onSceneDescription }: CameraCaptureProps) => {
 
   return (
     <div className="flex flex-col items-center gap-4 w-full">
-      <div className="relative w-full aspect-video bg-muted rounded-lg overflow-hidden">
+      <div className="relative w-full aspect-video bg-muted rounded-lg overflow-hidden touch-none">
         <video
           ref={videoRef}
           autoPlay
           playsInline
+          muted
           className="w-full h-full object-cover"
         />
         <canvas ref={canvasRef} className="hidden" />
       </div>
 
-      <div className="flex gap-4">
+      <div className="flex flex-col sm:flex-row gap-4 w-full">
         {!isStreaming ? (
           <Button
             onClick={startCamera}
             size="lg"
-            className="min-h-16 px-8 text-lg font-semibold"
+            className="min-h-16 px-8 text-lg font-semibold w-full active:scale-95 transition-transform"
           >
             <Camera className="mr-2 h-6 w-6" />
             Start Camera
@@ -114,7 +144,7 @@ const CameraCapture = ({ onSceneDescription }: CameraCaptureProps) => {
               onClick={captureAndAnalyze}
               disabled={isAnalyzing}
               size="lg"
-              className="min-h-16 px-8 text-lg font-semibold"
+              className="min-h-16 px-8 text-lg font-semibold flex-1 active:scale-95 transition-transform"
             >
               {isAnalyzing ? (
                 <>
@@ -129,7 +159,7 @@ const CameraCapture = ({ onSceneDescription }: CameraCaptureProps) => {
               onClick={stopCamera}
               variant="secondary"
               size="lg"
-              className="min-h-16 px-8 text-lg font-semibold"
+              className="min-h-16 px-8 text-lg font-semibold flex-1 sm:flex-initial active:scale-95 transition-transform"
             >
               Stop Camera
             </Button>

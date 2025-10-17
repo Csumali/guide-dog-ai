@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>PathGuide AI - AI Navigation Assistant for Visually Impaired Users</title>
     <meta name="description" content="PathGuide AI uses multimodal AI vision to help visually impaired users navigate safely. Get real-time scene descriptions and voice-guided navigation through your phone camera." />
     <meta name="author" content="PathGuide AI" />
@@ -16,10 +16,17 @@
     <meta name="twitter:site" content="@lovable_dev" />
     <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
     
-    <!-- PWA and accessibility -->
+    <!-- PWA Configuration -->
+    <link rel="manifest" href="/manifest.json" />
     <meta name="theme-color" content="#1a1f2e" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="PathGuide AI" />
+    <link rel="apple-touch-icon" href="/placeholder.svg" />
+    
+    <!-- Mobile optimizations -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="format-detection" content="telephone=no" />
   </head>
 
   <body>

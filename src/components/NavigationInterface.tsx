@@ -122,6 +122,11 @@ const NavigationInterface = ({ onNavigationStart }: NavigationInterfaceProps) =>
   };
 
   const nextStep = () => {
+    // Haptic feedback
+    if ('vibrate' in navigator) {
+      navigator.vibrate(50);
+    }
+    
     if (currentStepIndex < steps.length - 1) {
       const newIndex = currentStepIndex + 1;
       setCurrentStepIndex(newIndex);
@@ -129,6 +134,12 @@ const NavigationInterface = ({ onNavigationStart }: NavigationInterfaceProps) =>
       speak(`${stripHtml(step.html_instructions)}. Distance: ${step.distance.text}`, 0.9);
     } else {
       speak("You have arrived at your destination", 0.9);
+      
+      // Arrival haptic pattern
+      if ('vibrate' in navigator) {
+        navigator.vibrate([200, 100, 200, 100, 200]);
+      }
+      
       stopNavigation();
     }
   };

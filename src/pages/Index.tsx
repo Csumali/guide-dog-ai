@@ -1,15 +1,24 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import CameraCapture from "@/components/CameraCapture";
 import VoiceControls from "@/components/VoiceControls";
 import NavigationInterface from "@/components/NavigationInterface";
 import { speak } from "@/utils/textToSpeech";
+import { keepScreenAwake, detectMobileDevice } from "@/utils/mobileOptimizations";
 import { Eye, Navigation, Camera } from "lucide-react";
 
 const Index = () => {
   const [sceneDescription, setSceneDescription] = useState<string>("");
   const [navigationDestination, setNavigationDestination] = useState<string>("");
+
+  useEffect(() => {
+    // Mobile optimizations
+    if (detectMobileDevice()) {
+      keepScreenAwake();
+      console.log('Mobile device detected - optimizations enabled');
+    }
+  }, []);
 
   const handleSceneDescription = (description: string) => {
     setSceneDescription(description);
@@ -38,29 +47,31 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background p-4 md:p-8">
-      <div className="max-w-4xl mx-auto space-y-8">
+    <div className="min-h-screen bg-background p-4 md:p-8 pb-safe">
+      <div className="max-w-4xl mx-auto space-y-6 md:space-y-8">
         {/* Header */}
-        <header className="text-center space-y-4 py-8">
-          <div className="flex items-center justify-center gap-3">
-            <Eye className="h-12 w-12 text-primary" />
-            <h1 className="text-5xl font-bold text-foreground">PathGuide AI</h1>
+        <header className="text-center space-y-3 py-4 md:py-8">
+          <div className="flex items-center justify-center gap-2 md:gap-3">
+            <Eye className="h-10 md:h-12 w-10 md:w-12 text-primary" />
+            <h1 className="text-3xl md:text-5xl font-bold text-foreground">PathGuide AI</h1>
           </div>
-          <p className="text-2xl text-muted-foreground">
+          <p className="text-lg md:text-2xl text-muted-foreground">
             Your AI navigation companion
           </p>
         </header>
 
         {/* Main Content */}
-        <Tabs defaultValue="scene" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 h-16">
-            <TabsTrigger value="scene" className="text-lg gap-2">
-              <Camera className="h-5 w-5" />
-              Scene Analysis
+        <Tabs defaultValue="scene" className="space-y-4 md:space-y-6">
+          <TabsList className="grid w-full grid-cols-2 h-14 md:h-16 sticky top-0 z-50 bg-background">
+            <TabsTrigger value="scene" className="text-base md:text-lg gap-2 active:scale-95 transition-transform">
+              <Camera className="h-4 md:h-5 w-4 md:w-5" />
+              <span className="hidden sm:inline">Scene Analysis</span>
+              <span className="sm:hidden">Scene</span>
             </TabsTrigger>
-            <TabsTrigger value="navigation" className="text-lg gap-2">
-              <Navigation className="h-5 w-5" />
-              Navigation
+            <TabsTrigger value="navigation" className="text-base md:text-lg gap-2 active:scale-95 transition-transform">
+              <Navigation className="h-4 md:h-5 w-4 md:w-5" />
+              <span className="hidden sm:inline">Navigation</span>
+              <span className="sm:hidden">Navigate</span>
             </TabsTrigger>
           </TabsList>
 
