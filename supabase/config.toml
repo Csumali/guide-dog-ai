@@ -3,9 +3,6 @@ project_id = "qjacooruvltqsmhtpdla"
 [functions.analyze-scene]
 verify_jwt = false
 
-[functions.get-directions]
-verify_jwt = false
-
 [functions.find-object]
 verify_jwt = false
 
