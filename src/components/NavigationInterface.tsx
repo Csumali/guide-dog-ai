@@ -29,6 +29,7 @@ const NavigationInterface = ({ onNavigationStart }: NavigationInterfaceProps) =>
   const [isLoading, setIsLoading] = useState(false);
   const [steps, setSteps] = useState<Step[]>([]);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [announcedDistances, setAnnouncedDistances] = useState<Set<string>>(new Set());
   const { toast } = useToast();
 
   useEffect(() => {
@@ -115,12 +116,16 @@ const NavigationInterface = ({ onNavigationStart }: NavigationInterfaceProps) =>
 
     console.log(`Distance to next waypoint: ${distance.toFixed(0)}m`);
 
-    // Announce proximity at 50m, 20m
+    // Announce proximity at 50m, 20m (only once per step)
     const instruction = simplifyInstruction(step.html_instructions, step);
-    if (distance < 50 && distance > 45) {
+    const stepKey = `${currentStepIndex}`;
+    
+    if (distance < 50 && distance > 45 && !announcedDistances.has(`${stepKey}-50m`)) {
       speak("In 50 meters, " + instruction, 0.9);
-    } else if (distance < 20 && distance > 15) {
+      setAnnouncedDistances(prev => new Set(prev).add(`${stepKey}-50m`));
+    } else if (distance < 20 && distance > 15 && !announcedDistances.has(`${stepKey}-20m`)) {
       speak("In 20 meters, " + instruction, 0.9);
+      setAnnouncedDistances(prev => new Set(prev).add(`${stepKey}-20m`));
     }
 
     // Auto-advance when within 15 meters
@@ -225,6 +230,7 @@ const NavigationInterface = ({ onNavigationStart }: NavigationInterfaceProps) =>
     if (currentStepIndex < steps.length - 1) {
       const newIndex = currentStepIndex + 1;
       setCurrentStepIndex(newIndex);
+      setAnnouncedDistances(new Set()); // Clear announced distances for new step
       const step = steps[newIndex];
       const instruction = simplifyInstruction(step.html_instructions, step);
       speak(`${instruction}. Distance: ${step.distance.text}`, 0.9);
