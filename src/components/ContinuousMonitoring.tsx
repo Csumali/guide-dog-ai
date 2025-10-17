@@ -19,6 +19,12 @@ const ContinuousMonitoring = ({ isNavigating }: ContinuousMonitoringProps) => {
   const [avoidanceInstruction, setAvoidanceInstruction] = useState<string>("");
   const [threatLevel, setThreatLevel] = useState<"none" | "low" | "high">("none");
   const monitoringIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const lastSpeechRef = useRef<{ warning: string; distance: number; threatLevel: string; timestamp: number }>({ 
+    warning: "", 
+    distance: 0, 
+    threatLevel: "none", 
+    timestamp: 0 
+  });
   const { toast } = useToast();
 
   useEffect(() => {
@@ -111,12 +117,42 @@ const ContinuousMonitoring = ({ isNavigating }: ContinuousMonitoringProps) => {
         setLastWarning(data.warning);
         setAvoidanceInstruction(data.avoidance || "");
 
-        // Only speak if it's a new warning or high threat
-        if (threat === "high" || data.warning !== lastWarning) {
+        // Extract distance from warning (e.g., "Stairs 5 steps ahead" -> 5)
+        const distanceMatch = data.warning.match(/(\d+)\s*(step|feet)/i);
+        const currentDistance = distanceMatch ? parseInt(distanceMatch[1]) : 0;
+        
+        // Extract object type (first word before distance number)
+        const objectMatch = data.warning.match(/^([A-Za-z\s]+?)\s*\d/);
+        const currentObject = objectMatch ? objectMatch[1].trim() : data.warning;
+        
+        const now = Date.now();
+        const timeSinceLastSpeech = now - lastSpeechRef.current.timestamp;
+        const lastObject = lastSpeechRef.current.warning.match(/^([A-Za-z\s]+?)\s*\d/)?.[1]?.trim() || lastSpeechRef.current.warning;
+        
+        // Determine if we should speak based on smart throttling
+        const shouldSpeak = 
+          // First warning
+          lastSpeechRef.current.timestamp === 0 ||
+          // Different object detected
+          currentObject !== lastObject ||
+          // Threat level escalated
+          (threat === "high" && lastSpeechRef.current.threatLevel !== "high") ||
+          // Distance changed by 2+ steps and enough time passed (5s cooldown)
+          (timeSinceLastSpeech >= 5000 && Math.abs(currentDistance - lastSpeechRef.current.distance) >= 2);
+
+        if (shouldSpeak) {
           const message = data.avoidance 
             ? `${data.warning}. ${data.avoidance}` 
             : data.warning;
           speak(message, 1.0);
+          
+          // Update last speech tracking
+          lastSpeechRef.current = {
+            warning: data.warning,
+            distance: currentDistance,
+            threatLevel: threat,
+            timestamp: now
+          };
           
           // Urgent haptic pattern for high threats
           if ('vibrate' in navigator) {
