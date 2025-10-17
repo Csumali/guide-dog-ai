@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect, forwardRef, useImperativeHandle } from "react";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { AlertTriangle, Loader2 } from "lucide-react";
+import { AlertTriangle, Eye, EyeOff, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { speak, stopSpeaking } from "@/utils/textToSpeech";
@@ -77,9 +78,6 @@ const ContinuousMonitoring = forwardRef<ContinuousMonitoringRef, ContinuousMonit
   }));
 
   useEffect(() => {
-    // Auto-start monitoring when component mounts
-    startMonitoring();
-    
     return () => {
       stopMonitoring();
     };
@@ -205,24 +203,38 @@ const ContinuousMonitoring = forwardRef<ContinuousMonitoringRef, ContinuousMonit
 
       if (error) throw error;
 
+      // Check for point of interest and trigger scene description
+      if (data?.pointOfInterest && data.pointOfInterest.trim()) {
+        speak(data.pointOfInterest);
+        setLastWarning(data.pointOfInterest);
+        // Trigger detailed scene description after brief delay
+        setTimeout(() => {
+          captureAndAnalyze();
+        }, 1500);
+      }
+
+      // Check if target reached
+      if (data?.targetReached && searchTarget) {
+        speak(`You've reached the ${searchTarget}`);
+        setSearchTarget(null);
+        setThreatLevel("none");
+        setLastWarning("");
+        return;
+      }
+
+      // If searching for object and we have guidance, speak it
+      if (searchTarget && data?.guidance) {
+        speak(data.guidance, 1.0);
+        setLastWarning(data.guidance);
+        setThreatLevel(data.threatLevel || "none");
+        return;
+      }
+
       if (data?.warning) {
         const threat = data.threatLevel || "low";
         setThreatLevel(threat);
         setLastWarning(data.warning);
         setAvoidanceInstruction(data.avoidance || "");
-
-        // Check if target reached
-        if (data.targetReached && searchTarget) {
-          speak(`You've reached the ${searchTarget}`);
-          setSearchTarget(null);
-          return;
-        }
-
-        // If searching for object and we have guidance, speak it
-        if (searchTarget && data.guidance) {
-          speak(data.guidance, 1.0);
-          return;
-        }
 
         // Extract distance from warning (e.g., "Stairs 5 steps ahead" -> 5)
         const distanceMatch = data.warning.match(/(\d+)\s*(step|feet)/i);
@@ -291,7 +303,7 @@ const ContinuousMonitoring = forwardRef<ContinuousMonitoringRef, ContinuousMonit
         {isAnalyzing && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
       </div>
 
-      <div className="relative w-full aspect-video bg-muted rounded-lg overflow-hidden touch-none">
+      <div className="relative w-full aspect-video bg-muted rounded-lg overflow-hidden mb-3 touch-none">
         <video
           ref={videoRef}
           autoPlay
@@ -310,6 +322,25 @@ const ContinuousMonitoring = forwardRef<ContinuousMonitoringRef, ContinuousMonit
           </div>
         )}
       </div>
+
+      <Button
+        onClick={isMonitoring ? stopMonitoring : startMonitoring}
+        variant={isMonitoring ? "destructive" : "default"}
+        size="lg"
+        className="w-full active:scale-95 transition-transform"
+      >
+        {isMonitoring ? (
+          <>
+            <EyeOff className="mr-2 h-5 w-5" />
+            Stop Monitoring
+          </>
+        ) : (
+          <>
+            <Eye className="mr-2 h-5 w-5" />
+            Start Safety Monitor
+          </>
+        )}
+      </Button>
     </Card>
   );
 });
