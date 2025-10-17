@@ -69,10 +69,14 @@ IGNORE and do NOT report:
 If path is CLEAR, respond: {"warning": "", "threatLevel": "none", "avoidance": ""}
 
 RESPONSE FORMAT (keep EXTREMELY CONCISE):
-Warning (5 words max): "Steps ahead", "Car crossing path", "Wall ahead"
+Warning (8 words max): Include approximate distance in steps or feet
+- "Stairs 5 steps ahead"
+- "Car crossing 10 feet ahead"
+- "Wall 3 steps ahead"
+- "Bench 4 steps ahead"
 Avoidance (7 words max): "Move left", "Stop and step right", "Turn around"
 
-Provide clear directional guidance: left, right, stop, turn around, step back.
+Provide clear directional guidance with distance: Estimate distance in steps (1 step ≈ 2.5 feet) or feet for clarity.
 
 Only report what BLOCKS the forward path.`
           },
