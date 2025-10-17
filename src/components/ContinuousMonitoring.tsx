@@ -12,6 +12,7 @@ interface ContinuousMonitoringProps {
 
 export interface ContinuousMonitoringRef {
   captureAndAnalyze: () => void;
+  findObject: (searchQuery: string) => void;
 }
 
 const ContinuousMonitoring = forwardRef<ContinuousMonitoringRef, ContinuousMonitoringProps>(({ onSceneDescription }, ref) => {
@@ -31,8 +32,47 @@ const ContinuousMonitoring = forwardRef<ContinuousMonitoringRef, ContinuousMonit
   });
   const { toast } = useToast();
 
+  const findObject = async (searchQuery: string) => {
+    if (!videoRef.current || !canvasRef.current) {
+      toast({
+        title: "Camera not ready",
+        description: "Please start the camera first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const canvas = canvasRef.current;
+    const video = videoRef.current;
+    
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    
+    ctx.drawImage(video, 0, 0);
+    const imageData = canvas.toDataURL('image/jpeg', 0.8);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('find-object', {
+        body: { imageData, searchQuery }
+      });
+
+      if (error) throw error;
+
+      if (data?.result) {
+        speak(data.result);
+      }
+    } catch (error) {
+      console.error("Error finding object:", error);
+      speak("Sorry, I could not search for that right now");
+    }
+  };
+
   useImperativeHandle(ref, () => ({
-    captureAndAnalyze
+    captureAndAnalyze,
+    findObject
   }));
 
   useEffect(() => {

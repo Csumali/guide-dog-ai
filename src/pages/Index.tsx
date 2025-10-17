@@ -34,8 +34,17 @@ const Index = () => {
       speak("Analyzing scene now");
       monitorRef.current?.captureAndAnalyze();
     }
+    else if (lowerCommand.includes("find me")) {
+      const searchQuery = lowerCommand.replace("find me", "").trim();
+      if (searchQuery) {
+        speak(`Looking for ${searchQuery}`);
+        monitorRef.current?.findObject(searchQuery);
+      } else {
+        speak("What would you like me to find?");
+      }
+    }
     else if (lowerCommand.includes("help")) {
-      speak("Say 'describe what's in front of me' for scene analysis.");
+      speak("Say 'describe what's in front of me' for scene analysis, or 'find me' followed by what you're looking for.");
     } 
     else {
       speak("I heard: " + command + ". Say 'help' for available commands.");
@@ -80,6 +89,10 @@ const Index = () => {
             <li className="flex items-start gap-2">
               <span className="text-primary font-bold">•</span>
               <span><strong>"Describe what's in front of me"</strong> - Analyzes the current scene</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-primary font-bold">•</span>
+              <span><strong>"Find me [object]"</strong> - Locates specific objects (e.g., "find me a crosswalk button")</span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-primary font-bold">•</span>
