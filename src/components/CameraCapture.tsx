@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, forwardRef, useImperativeHandle } from "react";
 import { Button } from "@/components/ui/button";
 import { Camera, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,12 +8,21 @@ interface CameraCaptureProps {
   onSceneDescription: (description: string) => void;
 }
 
-const CameraCapture = ({ onSceneDescription }: CameraCaptureProps) => {
+export interface CameraCaptureRef {
+  captureAndAnalyze: () => void;
+}
+
+const CameraCapture = forwardRef<CameraCaptureRef, CameraCaptureProps>(({ onSceneDescription }, ref) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isStreaming, setIsStreaming] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const { toast } = useToast();
+
+  // Expose methods to parent component
+  useImperativeHandle(ref, () => ({
+    captureAndAnalyze
+  }));
 
   const startCamera = async () => {
     try {
@@ -168,6 +177,8 @@ const CameraCapture = ({ onSceneDescription }: CameraCaptureProps) => {
       </div>
     </div>
   );
-};
+});
+
+CameraCapture.displayName = "CameraCapture";
 
 export default CameraCapture;

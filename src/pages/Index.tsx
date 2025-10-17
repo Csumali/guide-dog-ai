@@ -1,17 +1,18 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import CameraCapture from "@/components/CameraCapture";
+import CameraCapture, { CameraCaptureRef } from "@/components/CameraCapture";
 import VoiceControls from "@/components/VoiceControls";
 import NavigationInterface from "@/components/NavigationInterface";
 import ContinuousMonitoring from "@/components/ContinuousMonitoring";
 import { speak } from "@/utils/textToSpeech";
 import { keepScreenAwake, detectMobileDevice } from "@/utils/mobileOptimizations";
-import { Eye, Navigation, Camera } from "lucide-react";
+import { Eye } from "lucide-react";
 
 const Index = () => {
   const [sceneDescription, setSceneDescription] = useState<string>("");
   const [navigationDestination, setNavigationDestination] = useState<string>("");
+  const [isNavigationActive, setIsNavigationActive] = useState(false);
+  const cameraRef = useRef<CameraCaptureRef>(null);
 
   useEffect(() => {
     // Mobile optimizations
@@ -31,19 +32,45 @@ const Index = () => {
 
   const handleNavigationStart = (destination: string) => {
     setNavigationDestination(destination);
+    setIsNavigationActive(true);
+    speak(`Starting navigation to ${destination}. Safety monitor activated.`);
   };
 
   const handleVoiceCommand = (command: string) => {
     const lowerCommand = command.toLowerCase();
     
-    if (lowerCommand.includes("navigate") || lowerCommand.includes("directions")) {
-      speak("Switch to the Navigation tab to enter your destination");
-    } else if (lowerCommand.includes("what") && lowerCommand.includes("see")) {
-      speak("Please use the Describe Scene button to analyze your surroundings");
-    } else if (lowerCommand.includes("help")) {
-      speak("I can describe what your camera sees and provide navigation. Use the tabs to switch between modes.");
-    } else {
-      speak("I heard: " + command + ". Use tabs to switch between Scene Analysis and Navigation.");
+    // Parse navigation commands
+    if (lowerCommand.includes("start navigation") || lowerCommand.includes("navigate to")) {
+      const destinationMatch = lowerCommand.match(/(?:navigate to|start navigation to|navigation to)\s+(.+)/i);
+      if (destinationMatch && destinationMatch[1]) {
+        const destination = destinationMatch[1].trim();
+        handleNavigationStart(destination);
+      } else {
+        speak("Please specify a destination. Say 'start navigation to' followed by your destination.");
+      }
+    } 
+    // Parse scene analysis commands
+    else if (lowerCommand.includes("describe") || 
+             lowerCommand.includes("what's in front") ||
+             lowerCommand.includes("what is in front") ||
+             lowerCommand.includes("whats in front") ||
+             lowerCommand.includes("what do you see")) {
+      speak("Analyzing scene now");
+      cameraRef.current?.captureAndAnalyze();
+    }
+    // Stop navigation
+    else if (lowerCommand.includes("stop navigation")) {
+      setIsNavigationActive(false);
+      setNavigationDestination("");
+      speak("Navigation stopped");
+    }
+    // Help command
+    else if (lowerCommand.includes("help")) {
+      speak("Say 'start navigation to' followed by a destination, or say 'describe what's in front of me' for scene analysis.");
+    } 
+    // Unknown command
+    else {
+      speak("I heard: " + command + ". Say 'help' for available commands.");
     }
   };
 
@@ -61,67 +88,52 @@ const Index = () => {
           </p>
         </header>
 
-        {/* Main Content */}
-        <Tabs defaultValue="scene" className="space-y-4 md:space-y-6">
-          <TabsList className="grid w-full grid-cols-2 h-14 md:h-16 sticky top-0 z-50 bg-background">
-            <TabsTrigger value="scene" className="text-base md:text-lg gap-2 active:scale-95 transition-transform">
-              <Camera className="h-4 md:h-5 w-4 md:w-5" />
-              <span className="hidden sm:inline">Scene Analysis</span>
-              <span className="sm:hidden">Scene</span>
-            </TabsTrigger>
-            <TabsTrigger value="navigation" className="text-base md:text-lg gap-2 active:scale-95 transition-transform">
-              <Navigation className="h-4 md:h-5 w-4 md:w-5" />
-              <span className="hidden sm:inline">Navigation</span>
-              <span className="sm:hidden">Navigate</span>
-            </TabsTrigger>
-          </TabsList>
+        {/* Voice Controls - Always Visible */}
+        <div className="flex justify-center">
+          <VoiceControls onCommand={handleVoiceCommand} />
+        </div>
 
-          <TabsContent value="scene" className="space-y-6">
-            <Card className="p-6 md:p-8 space-y-8">
-              <CameraCapture onSceneDescription={handleSceneDescription} />
-              
-              <div className="flex justify-center">
-                <VoiceControls onCommand={handleVoiceCommand} />
-              </div>
+        {/* Navigation Interface - Show when active */}
+        {isNavigationActive && (
+          <NavigationInterface onNavigationStart={handleNavigationStart} />
+        )}
 
-              {sceneDescription && (
-                <div className="bg-muted p-6 rounded-lg space-y-2">
-                  <h2 className="text-xl font-semibold text-foreground">Scene Description:</h2>
-                  <p className="text-lg text-foreground leading-relaxed">
-                    {sceneDescription}
-                  </p>
-                </div>
-              )}
-            </Card>
+        {/* Scene Analysis */}
+        <Card className="p-6 md:p-8 space-y-8">
+          <CameraCapture ref={cameraRef} onSceneDescription={handleSceneDescription} />
 
-            <ContinuousMonitoring isNavigating={false} />
-          </TabsContent>
+          {sceneDescription && (
+            <div className="bg-muted p-6 rounded-lg space-y-2">
+              <h2 className="text-xl font-semibold text-foreground">Scene Description:</h2>
+              <p className="text-lg text-foreground leading-relaxed">
+                {sceneDescription}
+              </p>
+            </div>
+          )}
+        </Card>
 
-          <TabsContent value="navigation" className="space-y-6">
-            <NavigationInterface onNavigationStart={handleNavigationStart} />
-            <ContinuousMonitoring isNavigating={!!navigationDestination} />
-          </TabsContent>
-        </Tabs>
+        {/* Safety Monitor - Always Available */}
+        <ContinuousMonitoring isNavigating={isNavigationActive} />
 
         {/* Instructions */}
         <Card className="p-6 bg-card/50">
-          <h2 className="text-2xl font-semibold mb-4 text-foreground">How to Use:</h2>
+          <h2 className="text-2xl font-semibold mb-4 text-foreground">Voice Commands:</h2>
           <ul className="space-y-3 text-lg text-muted-foreground">
             <li className="flex items-start gap-2">
               <span className="text-primary font-bold">•</span>
-              <span><strong>Scene Analysis:</strong> Camera describes obstacles, landmarks, and safe paths</span>
+              <span><strong>"Start navigation to [destination]"</strong> - Activates GPS navigation and safety monitor</span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-primary font-bold">•</span>
-              <span><strong>Navigation:</strong> Turn-by-turn GPS guidance to any destination</span>
+              <span><strong>"Describe what's in front of me"</strong> - Analyzes the current scene</span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-primary font-bold">•</span>
-              <span><strong>Voice Control:</strong> Hands-free commands and spoken feedback</span>
+              <span><strong>"Stop navigation"</strong> - Ends active navigation</span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-primary font-bold">•</span>
-              <span><strong>Accessibility:</strong> High contrast design optimized for low vision</span>
+              <span><strong>"Help"</strong> - Lists available commands</span>
             </li>
           </ul>
         </Card>
