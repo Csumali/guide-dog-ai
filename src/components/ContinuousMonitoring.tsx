@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { AlertTriangle, Eye, EyeOff, Loader2 } from "lucide-react";
@@ -6,9 +6,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { speak, stopSpeaking } from "@/utils/textToSpeech";
 
-interface ContinuousMonitoringProps {}
+interface ContinuousMonitoringProps {
+  onSceneDescription?: (description: string) => void;
+}
 
-const ContinuousMonitoring: React.FC<ContinuousMonitoringProps> = () => {
+export interface ContinuousMonitoringRef {
+  captureAndAnalyze: () => void;
+}
+
+const ContinuousMonitoring = forwardRef<ContinuousMonitoringRef, ContinuousMonitoringProps>(({ onSceneDescription }, ref) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isMonitoring, setIsMonitoring] = useState(false);
@@ -24,6 +30,10 @@ const ContinuousMonitoring: React.FC<ContinuousMonitoringProps> = () => {
     timestamp: 0 
   });
   const { toast } = useToast();
+
+  useImperativeHandle(ref, () => ({
+    captureAndAnalyze
+  }));
 
   useEffect(() => {
     return () => {
@@ -84,6 +94,48 @@ const ContinuousMonitoring: React.FC<ContinuousMonitoringProps> = () => {
     setThreatLevel("none");
     setLastWarning("");
     stopSpeaking();
+  };
+
+  const captureAndAnalyze = async () => {
+    if (!videoRef.current || !canvasRef.current) {
+      toast({
+        title: "Camera not ready",
+        description: "Please start the camera first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const canvas = canvasRef.current;
+    const video = videoRef.current;
+    
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    
+    ctx.drawImage(video, 0, 0);
+    const imageData = canvas.toDataURL('image/jpeg', 0.8);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('analyze-scene', {
+        body: { imageData }
+      });
+
+      if (error) throw error;
+
+      if (data?.description) {
+        onSceneDescription?.(data.description);
+      }
+    } catch (error) {
+      console.error("Error analyzing scene:", error);
+      toast({
+        title: "Analysis failed",
+        description: "Could not analyze the scene. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const analyzeForHazards = async () => {
@@ -222,6 +274,6 @@ const ContinuousMonitoring: React.FC<ContinuousMonitoringProps> = () => {
       </Button>
     </Card>
   );
-};
+});
 
 export default ContinuousMonitoring;

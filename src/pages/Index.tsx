@@ -1,15 +1,14 @@
 import { useState, useEffect, useRef } from "react";
 import { Card } from "@/components/ui/card";
-import CameraCapture, { CameraCaptureRef } from "@/components/CameraCapture";
 import VoiceControls from "@/components/VoiceControls";
-import ContinuousMonitoring from "@/components/ContinuousMonitoring";
+import ContinuousMonitoring, { ContinuousMonitoringRef } from "@/components/ContinuousMonitoring";
 import { speak } from "@/utils/textToSpeech";
 import { keepScreenAwake, detectMobileDevice } from "@/utils/mobileOptimizations";
 import { Eye } from "lucide-react";
 
 const Index = () => {
   const [sceneDescription, setSceneDescription] = useState<string>("");
-  const cameraRef = useRef<CameraCaptureRef>(null);
+  const monitorRef = useRef<ContinuousMonitoringRef>(null);
 
   useEffect(() => {
     // Mobile optimizations
@@ -33,7 +32,7 @@ const Index = () => {
         lowerCommand.includes("whats in front") ||
         lowerCommand.includes("what do you see")) {
       speak("Analyzing scene now");
-      cameraRef.current?.captureAndAnalyze();
+      monitorRef.current?.captureAndAnalyze();
     }
     else if (lowerCommand.includes("help")) {
       speak("Say 'describe what's in front of me' for scene analysis.");
@@ -62,22 +61,17 @@ const Index = () => {
           <VoiceControls onCommand={handleVoiceCommand} />
         </div>
 
-        {/* Scene Analysis */}
-        <Card className="p-6 md:p-8 space-y-8">
-          <CameraCapture ref={cameraRef} onSceneDescription={handleSceneDescription} />
+        {/* Camera & Safety Monitor */}
+        <ContinuousMonitoring ref={monitorRef} onSceneDescription={handleSceneDescription} />
 
-          {sceneDescription && (
-            <div className="bg-muted p-6 rounded-lg space-y-2">
-              <h2 className="text-xl font-semibold text-foreground">Scene Description:</h2>
-              <p className="text-lg text-foreground leading-relaxed">
-                {sceneDescription}
-              </p>
-            </div>
-          )}
-        </Card>
-
-        {/* Safety Monitor - Always Available */}
-        <ContinuousMonitoring />
+        {sceneDescription && (
+          <Card className="p-6 bg-muted">
+            <h2 className="text-xl font-semibold text-foreground mb-2">Scene Description:</h2>
+            <p className="text-lg text-foreground leading-relaxed">
+              {sceneDescription}
+            </p>
+          </Card>
+        )}
 
         {/* Instructions */}
         <Card className="p-6 bg-card/50">
