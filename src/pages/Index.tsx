@@ -1,12 +1,8 @@
 import { useState, useEffect, useRef } from "react";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import VoiceControls from "@/components/VoiceControls";
 import ContinuousMonitoring, { ContinuousMonitoringRef } from "@/components/ContinuousMonitoring";
 import { speak } from "@/utils/textToSpeech";
 import { keepScreenAwake, detectMobileDevice } from "@/utils/mobileOptimizations";
-import { Dog, Mic, Send, Play } from "lucide-react";
 
 const Index = () => {
   const [sceneDescription, setSceneDescription] = useState<string>("");
@@ -18,6 +14,11 @@ const Index = () => {
       keepScreenAwake();
       console.log('Mobile device detected - optimizations enabled');
     }
+    
+    // Auto-start monitoring on launch
+    setTimeout(() => {
+      monitorRef.current?.captureAndAnalyze();
+    }, 1000);
   }, []);
 
   const handleSceneDescription = (description: string) => {
@@ -54,60 +55,13 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background p-4 md:p-6 pb-safe">
-      <div className="max-w-3xl mx-auto space-y-4 md:space-y-6">
-        {/* Header */}
-        <header className="text-center space-y-2 py-6">
-          <div className="flex items-center justify-center gap-3">
-            <Dog className="h-10 w-10 text-secondary" />
-            <h1 className="text-4xl font-bold text-foreground">Guide Dog AI</h1>
-          </div>
-          <p className="text-base text-secondary/90">
-            Your AI-powered guide that sees, announces, and helps you navigate safely
-          </p>
-        </header>
-
-        {/* Input Card */}
-        <Card className="p-6 bg-card border-border">
-          <h2 className="text-lg font-medium mb-4 text-foreground">How can I help you?</h2>
-          <div className="flex gap-2">
-            <Input 
-              placeholder="Ask a question or navigate to a place..." 
-              className="flex-1 bg-input border-border text-foreground placeholder:text-muted-foreground"
-            />
-            <Button size="icon" variant="ghost" className="text-muted-foreground hover:text-foreground">
-              <Mic className="h-5 w-5" />
-            </Button>
-            <Button size="icon" className="bg-primary hover:bg-primary/90">
-              <Send className="h-5 w-5" />
-            </Button>
-          </div>
-        </Card>
-
-        {/* Action Buttons */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Button 
-            size="lg" 
-            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium h-14 text-base"
-            onClick={() => monitorRef.current?.captureAndAnalyze()}
-          >
-            <Play className="h-5 w-5 mr-2" />
-            Start Detection
-          </Button>
-          <VoiceControls onCommand={handleVoiceCommand} />
-        </div>
-
-        {/* Camera & Safety Monitor */}
+    <div className="min-h-screen bg-background pb-safe">
+      <div className="h-full">
+        {/* Camera & Safety Monitor - Full Screen */}
         <ContinuousMonitoring ref={monitorRef} onSceneDescription={handleSceneDescription} />
-
-        {sceneDescription && (
-          <Card className="p-6 bg-card border-border">
-            <h2 className="text-xl font-semibold text-foreground mb-2">Scene Description:</h2>
-            <p className="text-base text-foreground/90 leading-relaxed">
-              {sceneDescription}
-            </p>
-          </Card>
-        )}
+        
+        {/* Hidden Voice Controls - Always Listening */}
+        <VoiceControls onCommand={handleVoiceCommand} />
       </div>
     </div>
   );

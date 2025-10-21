@@ -53,77 +53,58 @@ const VoiceControls = ({ onCommand }: VoiceControlsProps) => {
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
       const recognitionInstance = new SpeechRecognition();
       
-      recognitionInstance.continuous = false;
+      recognitionInstance.continuous = true;
       recognitionInstance.interimResults = false;
       recognitionInstance.lang = 'en-US';
 
       recognitionInstance.onresult = (event: any) => {
-        const transcript = event.results[0][0].transcript;
+        const transcript = event.results[event.results.length - 1][0].transcript;
         console.log('Voice command:', transcript);
         onCommand(transcript);
       };
 
       recognitionInstance.onerror = (event: any) => {
         console.error('Speech recognition error:', event.error);
-        setIsListening(false);
-        toast({
-          title: "Voice recognition error",
-          description: "Could not process voice command. Please try again.",
-          variant: "destructive",
-        });
+        // Auto-restart on error
+        if (event.error !== 'aborted') {
+          setTimeout(() => {
+            try {
+              recognitionInstance.start();
+            } catch (e) {
+              console.error('Failed to restart recognition:', e);
+            }
+          }, 1000);
+        }
       };
 
       recognitionInstance.onend = () => {
-        setIsListening(false);
+        // Auto-restart when it ends
+        console.log('Recognition ended, restarting...');
+        setTimeout(() => {
+          try {
+            recognitionInstance.start();
+            setIsListening(true);
+          } catch (e) {
+            console.error('Failed to restart recognition:', e);
+          }
+        }, 500);
       };
 
       setRecognition(recognitionInstance);
+      
+      // Auto-start listening
+      try {
+        recognitionInstance.start();
+        setIsListening(true);
+        console.log('Voice recognition auto-started');
+      } catch (e) {
+        console.error('Failed to start recognition:', e);
+      }
     }
-  }, [onCommand, toast]);
+  }, [onCommand]);
 
-  const toggleListening = () => {
-    if (!recognition) {
-      toast({
-        title: "Voice not supported",
-        description: "Your browser doesn't support voice input",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (isListening) {
-      recognition.stop();
-      setIsListening(false);
-    } else {
-      recognition.start();
-      setIsListening(true);
-      toast({
-        title: "Listening...",
-        description: "Speak your command",
-      });
-    }
-  };
-
-  return (
-    <Button
-      onClick={toggleListening}
-      size="lg"
-      variant={isListening ? "destructive" : "default"}
-      className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium h-14 text-base"
-    >
-      {isListening ? (
-        <>
-          <MicOff className="mr-2 h-5 w-5" />
-          Stop Listening
-        </>
-      ) : (
-        <>
-          <Mic className="mr-2 h-5 w-5" />
-          Ask Question
-        </>
-      )}
-    </Button>
-  );
+  // No UI - always listening in background
+  return null;
 };
 
 export default VoiceControls;
