@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { AlertTriangle, Eye, EyeOff, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { speak, stopSpeaking } from "@/utils/textToSpeech";
+import { speak, stopSpeaking, isSpeechActive } from "@/utils/textToSpeech";
 
 interface ContinuousMonitoringProps {
   onSceneDescription?: (description: string) => void;
@@ -40,6 +40,12 @@ const ContinuousMonitoring = forwardRef<ContinuousMonitoringRef, ContinuousMonit
         description: "Please start the camera first",
         variant: "destructive",
       });
+      return;
+    }
+    
+    // Don't analyze if speech is active or within buffer period
+    if (isSpeechActive()) {
+      console.log('Skipping object search - speech active or in buffer period');
       return;
     }
 
@@ -147,6 +153,12 @@ const ContinuousMonitoring = forwardRef<ContinuousMonitoringRef, ContinuousMonit
       });
       return;
     }
+    
+    // Don't analyze if speech is active or within buffer period
+    if (isSpeechActive()) {
+      console.log('Skipping scene analysis - speech active or in buffer period');
+      return;
+    }
 
     const canvas = canvasRef.current;
     const video = videoRef.current;
@@ -182,6 +194,12 @@ const ContinuousMonitoring = forwardRef<ContinuousMonitoringRef, ContinuousMonit
 
   const analyzeForHazards = async () => {
     if (!videoRef.current || !canvasRef.current || isAnalyzing) return;
+    
+    // Don't analyze if speech is active or within buffer period
+    if (isSpeechActive()) {
+      console.log('Skipping analysis - speech active or in buffer period');
+      return;
+    }
 
     setIsAnalyzing(true);
     const canvas = canvasRef.current;
