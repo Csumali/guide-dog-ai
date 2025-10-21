@@ -55,14 +55,12 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-safe">
-      <div className="h-full">
-        {/* Camera & Safety Monitor - Full Screen */}
-        <ContinuousMonitoring ref={monitorRef} onSceneDescription={handleSceneDescription} />
-        
-        {/* Hidden Voice Controls - Always Listening */}
-        <VoiceControls onCommand={handleVoiceCommand} />
-      </div>
+    <div className="fixed inset-0 overflow-hidden">
+      {/* Camera & Safety Monitor - Full Screen */}
+      <ContinuousMonitoring ref={monitorRef} onSceneDescription={handleSceneDescription} />
+      
+      {/* Hidden Voice Controls - Always Listening */}
+      <VoiceControls onCommand={handleVoiceCommand} />
     </div>
   );
 };

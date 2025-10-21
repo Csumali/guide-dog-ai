@@ -298,54 +298,25 @@ const ContinuousMonitoring = forwardRef<ContinuousMonitoringRef, ContinuousMonit
   };
 
   return (
-    <Card className={`p-4 ${threatLevel === "high" ? "border-destructive border-2" : threatLevel === "low" ? "border-accent" : ""}`}>
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <AlertTriangle className={`h-5 w-5 ${threatLevel === "high" ? "text-destructive" : threatLevel === "low" ? "text-accent" : "text-muted-foreground"}`} />
-          <h3 className="text-lg font-semibold">Safety Monitor</h3>
+    <div className="relative w-full h-screen bg-black overflow-hidden touch-none">
+      <video
+        ref={videoRef}
+        autoPlay
+        playsInline
+        muted
+        className="w-full h-full object-cover"
+      />
+      <canvas ref={canvasRef} className="hidden" />
+      
+      {threatLevel !== "none" && (
+        <div className={`absolute top-4 left-4 right-4 ${threatLevel === "high" ? "bg-destructive" : "bg-accent"} text-white px-4 py-3 rounded-lg text-sm font-semibold shadow-lg`}>
+          <div>{lastWarning}</div>
+          {avoidanceInstruction && (
+            <div className="text-xs mt-1 opacity-90">{avoidanceInstruction}</div>
+          )}
         </div>
-        {isAnalyzing && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
-      </div>
-
-      <div className="relative w-full aspect-video bg-muted rounded-lg overflow-hidden mb-3 touch-none">
-        <video
-          ref={videoRef}
-          autoPlay
-          playsInline
-          muted
-          className="w-full h-full object-cover"
-        />
-        <canvas ref={canvasRef} className="hidden" />
-        
-        {threatLevel !== "none" && (
-          <div className={`absolute top-2 left-2 right-2 ${threatLevel === "high" ? "bg-destructive" : "bg-accent"} text-white px-3 py-2 rounded-lg text-sm font-semibold`}>
-            <div>{lastWarning}</div>
-            {avoidanceInstruction && (
-              <div className="text-xs mt-1 opacity-90">{avoidanceInstruction}</div>
-            )}
-          </div>
-        )}
-      </div>
-
-      <Button
-        onClick={isMonitoring ? stopMonitoring : startMonitoring}
-        variant={isMonitoring ? "destructive" : "default"}
-        size="lg"
-        className="w-full active:scale-95 transition-transform"
-      >
-        {isMonitoring ? (
-          <>
-            <EyeOff className="mr-2 h-5 w-5" />
-            Stop Monitoring
-          </>
-        ) : (
-          <>
-            <Eye className="mr-2 h-5 w-5" />
-            Start Safety Monitor
-          </>
-        )}
-      </Button>
-    </Card>
+      )}
+    </div>
   );
 });
 
