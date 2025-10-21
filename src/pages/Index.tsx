@@ -2,7 +2,7 @@ import { useRef } from "react";
 import VoiceControls from "@/components/VoiceControls";
 import ContinuousMonitoring, { ContinuousMonitoringRef } from "@/components/ContinuousMonitoring";
 import { speak } from "@/utils/textToSpeech";
-import pathguideLogo from "@/assets/pathguide-logo.png";
+import guidedogLogo from "@/assets/guidedog-logo.png";
 
 const Index = () => {
   const monitorRef = useRef<ContinuousMonitoringRef>(null);
@@ -39,7 +39,7 @@ const Index = () => {
     <div className="flex flex-col h-screen bg-background">
       {/* Header with Logo */}
       <header className="flex items-center justify-center p-4 bg-background border-b">
-        <img src={pathguideLogo} alt="PathGuide AI" className="h-12 object-contain" />
+        <img src={guidedogLogo} alt="Guide Dog AI" className="h-12 object-contain" />
       </header>
       
       {/* Camera & Safety Monitor */}
