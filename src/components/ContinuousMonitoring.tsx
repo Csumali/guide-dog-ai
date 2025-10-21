@@ -298,24 +298,47 @@ const ContinuousMonitoring = forwardRef<ContinuousMonitoringRef, ContinuousMonit
   };
 
   return (
-    <div className="relative w-full h-screen bg-black overflow-hidden touch-none">
-      <video
-        ref={videoRef}
-        autoPlay
-        playsInline
-        muted
-        className="w-full h-full object-cover"
-      />
-      <canvas ref={canvasRef} className="hidden" />
-      
-      {threatLevel !== "none" && (
-        <div className={`absolute top-4 left-4 right-4 ${threatLevel === "high" ? "bg-destructive" : "bg-accent"} text-white px-4 py-3 rounded-lg text-sm font-semibold shadow-lg`}>
-          <div>{lastWarning}</div>
-          {avoidanceInstruction && (
-            <div className="text-xs mt-1 opacity-90">{avoidanceInstruction}</div>
+    <div className="flex flex-col h-full">
+      <div className="relative w-full flex-1 bg-black overflow-hidden touch-none">
+        <video
+          ref={videoRef}
+          autoPlay
+          playsInline
+          muted
+          className="w-full h-full object-cover"
+        />
+        <canvas ref={canvasRef} className="hidden" />
+        
+        {threatLevel !== "none" && (
+          <div className={`absolute top-4 left-4 right-4 ${threatLevel === "high" ? "bg-destructive" : "bg-accent"} text-white px-4 py-3 rounded-lg text-sm font-semibold shadow-lg`}>
+            <div>{lastWarning}</div>
+            {avoidanceInstruction && (
+              <div className="text-xs mt-1 opacity-90">{avoidanceInstruction}</div>
+            )}
+          </div>
+        )}
+      </div>
+
+      <div className="p-4 bg-background">
+        <Button
+          onClick={isMonitoring ? stopMonitoring : startMonitoring}
+          variant={isMonitoring ? "destructive" : "default"}
+          size="lg"
+          className="w-full active:scale-95 transition-transform"
+        >
+          {isMonitoring ? (
+            <>
+              <EyeOff className="mr-2 h-5 w-5" />
+              Stop Monitoring
+            </>
+          ) : (
+            <>
+              <Eye className="mr-2 h-5 w-5" />
+              Start Safety Monitor
+            </>
           )}
-        </div>
-      )}
+        </Button>
+      </div>
     </div>
   );
 });

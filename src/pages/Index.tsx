@@ -1,30 +1,11 @@
-import { useState, useEffect, useRef } from "react";
+import { useRef } from "react";
 import VoiceControls from "@/components/VoiceControls";
 import ContinuousMonitoring, { ContinuousMonitoringRef } from "@/components/ContinuousMonitoring";
 import { speak } from "@/utils/textToSpeech";
-import { keepScreenAwake, detectMobileDevice } from "@/utils/mobileOptimizations";
+import pathguideLogo from "@/assets/pathguide-logo.png";
 
 const Index = () => {
-  const [sceneDescription, setSceneDescription] = useState<string>("");
   const monitorRef = useRef<ContinuousMonitoringRef>(null);
-
-  useEffect(() => {
-    // Mobile optimizations
-    if (detectMobileDevice()) {
-      keepScreenAwake();
-      console.log('Mobile device detected - optimizations enabled');
-    }
-    
-    // Auto-start monitoring on launch
-    setTimeout(() => {
-      monitorRef.current?.captureAndAnalyze();
-    }, 1000);
-  }, []);
-
-  const handleSceneDescription = (description: string) => {
-    setSceneDescription(description);
-    speak(description);
-  };
 
   const handleVoiceCommand = (command: string) => {
     const lowerCommand = command.toLowerCase();
@@ -55,9 +36,16 @@ const Index = () => {
   };
 
   return (
-    <div className="fixed inset-0 overflow-hidden">
-      {/* Camera & Safety Monitor - Full Screen */}
-      <ContinuousMonitoring ref={monitorRef} onSceneDescription={handleSceneDescription} />
+    <div className="flex flex-col h-screen bg-background">
+      {/* Header with Logo */}
+      <header className="flex items-center justify-center p-4 bg-background border-b">
+        <img src={pathguideLogo} alt="PathGuide AI" className="h-12 object-contain" />
+      </header>
+      
+      {/* Camera & Safety Monitor */}
+      <div className="flex-1 overflow-hidden">
+        <ContinuousMonitoring ref={monitorRef} />
+      </div>
       
       {/* Hidden Voice Controls - Always Listening */}
       <VoiceControls onCommand={handleVoiceCommand} />
