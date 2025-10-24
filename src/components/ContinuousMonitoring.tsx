@@ -299,7 +299,7 @@ const ContinuousMonitoring = forwardRef<ContinuousMonitoringRef, ContinuousMonit
 
   return (
     <div className="flex flex-col h-full">
-      <div className="relative w-full flex-1 bg-black overflow-hidden touch-none">
+      <div className="relative w-full flex-1 bg-black overflow-hidden touch-none max-h-[calc(100vh-12rem)] md:max-h-none">
         <video
           ref={videoRef}
           autoPlay
