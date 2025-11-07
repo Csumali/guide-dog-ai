@@ -9,7 +9,7 @@ All colors MUST be HSL.
 @layer base {
   :root {
     /* Guide Dog AI theme - dark navy with bright blue accents */
-    --background: 215 35% 12%;
+    --background: 222 46% 11%;
     --foreground: 0 0% 98%;
 
     --card: 222 46% 11%;
